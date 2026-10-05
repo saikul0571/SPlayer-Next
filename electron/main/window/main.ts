@@ -5,6 +5,7 @@ import { createWindow } from "./create";
 import { initThumbar } from "@main/services/thumbar";
 import { enableTaskbarThumbnail } from "@main/services/thumbnail";
 import { initTray } from "@main/services/tray";
+import { initTouchBar, destroyTouchBar } from "@main/services/touchbar";
 import { store } from "@main/store";
 import { handleCacheProtocolOnPartition, MAIN_PARTITION } from "@main/utils/protocol";
 import { isAppQuitting } from "@main/utils/lifecycle";
@@ -65,6 +66,9 @@ export const createMainWindow = (): BrowserWindow => {
 
   // 初始化托盘
   initTray();
+
+  // 初始化 macOS TouchBar（仅 macOS 生效）
+  initTouchBar(mainWindow);
 
   // 自定义任务栏缩略图
   enableTaskbarThumbnail(mainWindow);
@@ -176,6 +180,7 @@ export const createMainWindow = (): BrowserWindow => {
 
   mainWindow.on("closed", () => {
     if (saveStateTimer) clearTimeout(saveStateTimer);
+    destroyTouchBar();
     mainWindow = null;
   });
 
