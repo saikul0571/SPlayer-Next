@@ -32,6 +32,7 @@
 - ⚡ **High-performance audio engine** — FFmpeg + Rust
 - 🎨 **Adaptive theming** — cover-based colors, Light / Dark / Auto
 - 📈 **Last.fm scrobbling**
+- 🍏 **Touch Bar Hold out**
 
 ## Development
 
