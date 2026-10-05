@@ -120,10 +120,10 @@ const rebuildTouchBar = (): void => {
       prevBtn!,
       playPauseBtn!,
       nextBtn!,
-      // 左右弹性空白，让中间歌词在剩余区域居中
-      new TouchBarSpacer({ size: "flexible" }),
+      // 歌词两侧仅保留最小间距，让歌词尽量占满可用空间（保持居中）
+      new TouchBarSpacer({ size: "small" }),
       lyricLabel!,
-      new TouchBarSpacer({ size: "flexible" }),
+      new TouchBarSpacer({ size: "small" }),
     ],
   });
   if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isFocused()) {
@@ -223,10 +223,10 @@ const buildTouchBar = (): void => {
       prevBtn,
       playPauseBtn,
       nextBtn,
-      // 左右弹性空白，让中间歌词在剩余区域居中
-      new TouchBarSpacer({ size: "flexible" }),
+      // 歌词两侧仅保留最小间距，让歌词尽量占满可用空间（保持居中）
+      new TouchBarSpacer({ size: "small" }),
       lyricLabel,
-      new TouchBarSpacer({ size: "flexible" }),
+      new TouchBarSpacer({ size: "small" }),
     ],
   });
 };
