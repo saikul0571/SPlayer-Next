@@ -32,6 +32,7 @@ import {
   setTrayPlayMode,
   setTrayLikeState,
 } from "@main/services/tray";
+import { setTouchBarLikeState } from "@main/services/touchbar";
 import { setTaskbarThumbnailCover } from "@main/services/thumbnail";
 import { getMainWindow, setTaskbarProgress } from "@main/window";
 import { store } from "@main/store";
@@ -862,9 +863,10 @@ export const registerPlayerIpc = (): void => {
     setTrayPlayMode(repeat, shuffle);
   });
 
-  // 渲染进程同步当前歌曲喜欢状态到托盘与缩略图工具栏
+  // 渲染进程同步当前歌曲喜欢状态到托盘、缩略图工具栏与 TouchBar
   ipcMain.on("player:syncLikeState", (_event, liked: boolean) => {
     setTrayLikeState(liked);
+    setTouchBarLikeState(liked);
     getThumbar()?.updateLike(liked);
   });
 
