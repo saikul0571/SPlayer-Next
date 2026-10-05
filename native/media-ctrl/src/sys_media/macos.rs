@@ -9,15 +9,14 @@ use std::{
 use anyhow::Result;
 use block2::RcBlock;
 use objc2::{
-    AnyThread, Message,
+    Message,
     rc::Retained,
     runtime::{AnyObject, ProtocolObject},
 };
-use objc2_app_kit::NSImage;
-use objc2_foundation::{NSArray, NSData, NSMutableDictionary, NSNumber, NSSize, NSString};
+use objc2_foundation::{NSArray, NSMutableDictionary, NSNumber, NSString};
 use objc2_media_player::{
     MPChangePlaybackPositionCommandEvent, MPChangePlaybackRateCommandEvent,
-    MPChangeRepeatModeCommandEvent, MPChangeShuffleModeCommandEvent, MPMediaItemArtwork,
+    MPChangeRepeatModeCommandEvent, MPChangeShuffleModeCommandEvent,
     MPMediaItemPropertyAlbumTitle, MPMediaItemPropertyArtist, MPMediaItemPropertyArtwork,
     MPMediaItemPropertyPersistentID, MPMediaItemPropertyPlaybackDuration, MPMediaItemPropertyTitle,
     MPNowPlayingInfoCenter, MPNowPlayingInfoPropertyElapsedPlaybackTime,
@@ -31,7 +30,7 @@ use crate::model::{
     MediaEvent, MediaEventType, MetadataPayload, PlayModeParam, PlayStateParam, PlaybackStatus,
     TimelineParam,
 };
-use tracing::{info, warn};
+use tracing::info;
 
 /// 用于把 nowPlayingInfo 相关对象送进后台线程做延迟重推。
 /// SAFETY: 该对象只在线程中调用 `setNowPlayingInfo`；Retained 走 ARC 引用计数（线程安全），
@@ -352,7 +351,6 @@ impl SystemMediaControls for MacosImpl {
         let Ok(info) = self.info.lock() else { return };
         // 代际递增：任何一次元数据更新都使旧的延迟重推失效
         let generation = self.poke_gen.fetch_add(1, Ordering::SeqCst) + 1;
-        let mut has_artwork = false;
         unsafe {
             info.setObject_forKey(
                 &NSString::from_str(&payload.title),
@@ -389,41 +387,18 @@ impl SystemMediaControls for MacosImpl {
                 info.removeObjectForKey(MPMediaItemPropertyPlaybackDuration);
             }
 
-            if let Some(data) = payload.cover_data {
-                info!("update_metadata: 收到 cover_data, {} bytes", data.len());
-                let ns_data = NSData::from_vec(data);
-                let img = NSImage::alloc();
-                if let Some(img) = NSImage::initWithData(img, &ns_data) {
-                    let img_size = img.size();
-                    info!("update_metadata: NSImage 初始化成功, size={:?}", img_size);
-                    let handler = RcBlock::new(move |_: NSSize| -> NonNull<NSImage> {
-                        NonNull::new(Retained::as_ptr(&img).cast_mut()).expect("NSImage null")
-                    });
-                    let artwork = MPMediaItemArtwork::alloc();
-                    let artwork = MPMediaItemArtwork::initWithBoundsSize_requestHandler(
-                        artwork, img_size, &handler,
-                    );
-                    info!("update_metadata: MPMediaItemArtwork 已创建, 设置到 info 字典");
-                    info.setObject_forKey(
-                        &artwork,
-                        ProtocolObject::from_ref(MPMediaItemPropertyArtwork),
-                    );
-                    has_artwork = true;
-                } else {
-                    warn!("update_metadata: NSImage initWithData 失败（封面数据不是有效图片?）");
-                }
-            } else {
-                warn!("update_metadata: 未收到 cover_data（没有封面数据）");
-                info.removeObjectForKey(MPMediaItemPropertyArtwork);
+            // 按用户需求不设置封面（artwork），系统媒体控件直接显示应用图标
+            if payload.cover_data.is_some() {
+                info!("update_metadata: 收到 cover_data，已忽略（使用应用图标）");
             }
+            info.removeObjectForKey(MPMediaItemPropertyArtwork);
 
             self.np_info_ctr.setNowPlayingInfo(Some(&*info));
         }
 
-        // 已知 macOS 怪癖：TouchBar 的 Now Playing 控件若在「无封面」状态首次出现，
-        // 之后封面到达不会主动刷新。这里在封面写入后延迟 ~700ms 再强制重推一次，
-        // 并用代际 generation 确保不会用旧封面覆盖更新的播放状态。
-        if has_artwork {
+        // 已知 macOS 怪癖：TouchBar 的 Now Playing 控件首次出现后信息变更不主动刷新。
+        // 这里在元数据写入后延迟 ~700ms 强制重推一次，并用代际 generation 保证不会用旧数据覆盖。
+        {
             let poke = SendableNowPlaying {
                 ctr: self.np_info_ctr.clone(),
                 dict: (*info).clone(),
@@ -433,7 +408,7 @@ impl SystemMediaControls for MacosImpl {
                 std::thread::sleep(std::time::Duration::from_millis(700));
                 if gen_arc.load(Ordering::SeqCst) == generation {
                     poke.push();
-                    info!("poke: 延迟重推 nowPlayingInfo（带封面），强制 TouchBar 刷新");
+                    info!("poke: 延迟重推 nowPlayingInfo，强制 TouchBar 刷新");
                 }
             });
         }
