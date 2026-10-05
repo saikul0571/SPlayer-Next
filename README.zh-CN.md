@@ -32,7 +32,7 @@
 - ⚡ **高性能音频引擎** —— FFmpeg + Rust
 - 🎨 **自适应主题** —— 基于封面取色，Light / Dark / Auto
 - 📈 **Last.fm Scrobble**
-- 🍏 **苹果Touch Bar支持** —— 
+- 🍏 **苹果Touch Bar支持**
 
 ## 开发
 
