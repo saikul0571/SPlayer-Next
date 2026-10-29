@@ -19,7 +19,7 @@ import {
   onPositionSync,
   onTrackChange,
 } from "@main/services/nowPlaying";
-import type { LyricLine } from "@shared/types/lyrics";
+import type { LyricLine } from "lyric-kit";
 
 /** 是否 macOS（TouchBar 仅在此平台存在） */
 const isMac = process.platform === "darwin";
