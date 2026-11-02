@@ -20,9 +20,9 @@ import { playerTransitionActive, setPlayerExpanded } from "@/services/playerTran
 const status = useStatusStore();
 const media = useMediaStore();
 const settings = useSettingsStore();
-/** macOS 无边框模式下顶栏左侧为原生红绿灯让位 */
+/** macOS 无边框模式下顶栏左侧为原生红绿灯让位（红绿灯右缘约 74px，取 96px 留出呼吸空间） */
 const macTrafficInset = computed(() =>
-  isMac && settings.system.system.borderlessWindow ? "pl-14" : "",
+  isMac && settings.system.system.borderlessWindow ? "pl-24" : "",
 );
 const fav = useFavorite();
 const { enqueue: enqueueDownload } = useDownload();

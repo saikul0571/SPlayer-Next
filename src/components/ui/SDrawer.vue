@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { usePopupZIndex } from "@/composables/useZIndex";
+import { isMac } from "@/utils/config";
+import { useSettingsStore } from "@/stores/settings";
 
 export interface SDrawerProps {
   /** 控制打开状态（v-model:open） */
@@ -33,6 +35,13 @@ const emit = defineEmits<{
 }>();
 
 const { zIndex, onOpenChange } = usePopupZIndex();
+
+const settings = useSettingsStore();
+
+/** macOS 无边框模式：左侧抽屉头部避让原生红绿灯 */
+const trafficSafeHeader = computed(() =>
+  isMac && settings.system.system.borderlessWindow && props.side === "left" ? "pl-24" : "",
+);
 
 const isOpen = ref(props.open ?? false);
 
@@ -100,7 +109,11 @@ const contentClass = computed(() => {
         <DialogDescription class="sr-only">{{ description ?? "" }}</DialogDescription>
 
         <!-- 头部 -->
-        <div v-if="$slots.header || title || closable" class="flex items-center shrink-0 px-4 py-3">
+        <div
+          v-if="$slots.header || title || closable"
+          class="flex items-center shrink-0 px-4 py-3"
+          :class="trafficSafeHeader"
+        >
           <div class="flex-1 min-w-0">
             <slot name="header">
               <span v-if="title" class="text-sm font-semibold truncate">{{ title }}</span>

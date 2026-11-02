@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { CSSProperties } from "vue";
 import { usePopupZIndex } from "@/composables/useZIndex";
+import { isMac } from "@/utils/config";
+import { useSettingsStore } from "@/stores/settings";
 
 export interface SDialogProps {
   /** 控制打开状态（v-model:open） */
@@ -43,11 +45,19 @@ const props = withDefaults(defineProps<SDialogProps>(), {
 
 const DESTROY_DELAY_MS = 180;
 
+const settings = useSettingsStore();
+
+/** 红绿灯占据窗口左上角（约 74px 高度带），mac 无边框模式下弹窗需上下各留出安全区 */
+const trafficSafeMaxHeight = computed(() =>
+  isMac && settings.system.system.borderlessWindow ? "calc(100vh - 128px)" : undefined,
+);
+
 const containerStyle = computed(() => ({
   width: props.width,
   height: props.height === "auto" ? undefined : props.height,
-  maxHeight: props.height === "auto" ? "85vh" : undefined,
-  top: props.top,
+  maxHeight: props.height === "auto" ? "85vh" : (trafficSafeMaxHeight.value ?? undefined),
+  // 显式指定 top 时同样避让红绿灯（12vh 等在小窗口下可能进入红绿灯区域）
+  top: props.top ? (trafficSafeMaxHeight.value ? `max(${props.top}, 72px)` : props.top) : undefined,
 }));
 
 const emit = defineEmits<{
