@@ -9,6 +9,7 @@ import { initTouchBar, destroyTouchBar } from "@main/services/touchbar";
 import { store } from "@main/store";
 import { handleCacheProtocolOnPartition, MAIN_PARTITION } from "@main/utils/protocol";
 import { isAppQuitting } from "@main/utils/lifecycle";
+import { isMac } from "@main/utils/config";
 import { broadcast } from "@main/utils/broadcast";
 import { CURRENT_AGREEMENT_VERSION } from "@shared/constants/agreement";
 import { coreLog } from "@main/utils/logger";
@@ -44,7 +45,11 @@ export const createMainWindow = (): BrowserWindow => {
     y: legacyState?.y ?? undefined,
     // 位置、尺寸与最大化状态
     ...(remember ? { name: "main-window", windowStatePersistence: true } : {}),
-    frame: !borderlessWindow,
+    // macOS 无边框模式使用原生红绿灯（hiddenInset），保留系统窗口行为；
+    // 其他平台保持 frame 开关
+    ...(isMac && borderlessWindow
+      ? { titleBarStyle: "hiddenInset" as const, trafficLightPosition: { x: 16, y: 20 } }
+      : { frame: !borderlessWindow }),
     webPreferences: {
       partition: MAIN_PARTITION,
       webgl: true,

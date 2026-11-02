@@ -13,12 +13,17 @@ import { useTimeFormat } from "@/composables/useTimeFormat";
 import { useProgressLyric } from "@/composables/useProgressLyric";
 import Lyrics from "@/components/player/Lyrics/index.vue";
 import { useWindowControls } from "@/composables/useWindowControls";
+import { isMac } from "@/utils/config";
 import * as player from "@/core/player";
 import { playerTransitionActive, setPlayerExpanded } from "@/services/playerTransition";
 
 const status = useStatusStore();
 const media = useMediaStore();
 const settings = useSettingsStore();
+/** macOS 无边框模式下顶栏左侧为原生红绿灯让位 */
+const macTrafficInset = computed(() =>
+  isMac && settings.system.system.borderlessWindow ? "pl-14" : "",
+);
 const fav = useFavorite();
 const { enqueue: enqueueDownload } = useDownload();
 const { t } = useI18n();
@@ -316,7 +321,7 @@ const showComments = (): void => {
           @mouseenter="onBarEnter"
           @mouseleave="onBarLeave"
         >
-          <div class="app-no-drag flex items-center gap-2">
+          <div class="app-no-drag flex items-center gap-2" :class="macTrafficInset">
             <SButton
               type="cover"
               variant="ghost"

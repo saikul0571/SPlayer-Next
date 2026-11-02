@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useSettingsDialog } from "@/settings/useSettingsDialog";
 import { useWindowControls } from "@/composables/useWindowControls";
+import { isMac } from "@/utils/config";
 import { useThemeStore } from "@/stores/theme";
 import { useUpdateStore } from "@/stores/update";
 import type { DropdownMenuItem } from "@/components/ui/SDropdownMenu.vue";
@@ -106,7 +107,7 @@ const onMenuSelect = (key: string): void => {
           </SButton>
         </template>
       </SDropdownMenu>
-      <SDivider v-if="isBorderless" vertical />
+      <SDivider v-if="isBorderless && !isMac" vertical />
       <WindowControls />
     </div>
     <UiZoomDialog v-model:open="uiZoomOpen" />

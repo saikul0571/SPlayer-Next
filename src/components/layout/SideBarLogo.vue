@@ -1,9 +1,18 @@
 <script setup lang="ts">
+import { useSettingsStore } from "@/stores/settings";
+import { isMac } from "@/utils/config";
+
 defineProps<{
   collapsed: boolean;
 }>();
 
 const router = useRouter();
+const settings = useSettingsStore();
+
+/** macOS 无边框模式下原生红绿灯占据左上角，logo 整行下移避让 */
+const trafficLightOffset = computed(() =>
+  isMac && settings.system.system.borderlessWindow ? "mt-11" : "",
+);
 
 const goHome = (): void => {
   router.push("/");
@@ -11,7 +20,7 @@ const goHome = (): void => {
 </script>
 
 <template>
-  <div class="flex items-center justify-center h-16 shrink-0 px-4">
+  <div class="flex items-center justify-center h-16 shrink-0 px-4" :class="trafficLightOffset">
     <div
       role="link"
       tabindex="0"

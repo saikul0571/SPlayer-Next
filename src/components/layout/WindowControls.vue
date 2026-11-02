@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useWindowControls } from "@/composables/useWindowControls";
+import { isMac } from "@/utils/config";
 import IconMinus from "~icons/lucide/minus";
 import IconSquare from "~icons/lucide/square";
 import IconCopy from "~icons/lucide/copy";
@@ -20,7 +21,8 @@ const onClose = (): void => {
 </script>
 
 <template>
-  <div v-if="isBorderless" class="flex items-center gap-3 shrink-0">
+  <!-- macOS 无边框模式使用系统原生红绿灯，不渲染自绘控制按钮 -->
+  <div v-if="isBorderless && !isMac" class="flex items-center gap-3 shrink-0">
     <SButton
       class="window-control-button app-no-drag"
       :type="cover ? 'cover' : undefined"
